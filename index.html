@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sunbase Frontend Assignment - Neel Kashyap</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
+    <!-- Custom CSS -->
+    <style>
+        .form-element {
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            padding: 10px;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+            cursor: grab;
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <a class="navbar-brand" href="#">Form Designer</a>
+        <div class="ml-auto">
+            <button id="save-form" class="btn btn-danger">Save</button>
+        </div>
+    </nav>
+    <hr>
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-lg-4">
+                <div id="form-controls">
+                    <button id="add-input" class="btn btn-primary btn-block">Add Input</button>
+                    <button id="add-select" class="btn btn-primary btn-block">Add Select</button>
+                    <button id="add-textarea" class="btn btn-primary btn-block">Add Textarea</button>
+                </div>
+            </div>
+            <div class="col-lg-8">
+                <div id="form-designer">
+                    <!-- Form elements will be dynamically generated here -->
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!-- Bootstrap JavaScript -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Sample JSON data
+        let formData = [
+            {
+                "id": "c0ac49c5-871e-4c72-a878-251de465e6b4",
+                "type": "input",
+                "label": "Sample Label",
+                "placeholder": "Sample placeholder"
+            },
+            {
+                "id": "146e69c2-1630-4a27-9d0b-f09e463a66e4",
+                "type": "select",
+                "label": "Sample Label",
+                "options": ["Sample Option1", "Sample Option2", "Sample Option3"]
+            },
+            {
+                "id": "45002ecf-85cf-4852-bc46-529f94a758f5",
+                "type": "input",
+                "label": "Sample Label",
+                "placeholder": "Sample Placeholder"
+            },
+            {
+                "id": "680cff8d-c7f9-40be-8767-e3d6ba420952",
+                "type": "textarea",
+                "label": "Sample Label",
+                "placeholder": "Sample Placeholder"
+            }
+        ];
+
+        // Function to generate form elements from JSON data
+        function generateFormElements(data) {
+            let formHTML = '';
+            data.forEach(element => {
+                switch (element.type) {
+                    case 'input':
+                        formHTML += `<div id="form-element-${element.id}" class="form-element" draggable="true" ondragstart="dragStart(event)" ondrop="drop(event)" ondragover="allowDrop(event)">
+                                <input type="text" class="form-control" value="${element.label}" readonly>
+                                <input type="text" class="form-control" value="${element.placeholder}" onchange="updatePlaceholder('${element.id}', this.value)">
+                                <button class="btn btn-danger" onclick="removeElement('${element.id}')">Remove</button>
+                            </div>`;
+                        break;
+                    case 'select':
+                        formHTML += `<div id="form-element-${element.id}" class="form-element" draggable="true" ondragstart="dragStart(event)" ondrop="drop(event)" ondragover="allowDrop(event)">
+                                <select class="form-control" readonly>
+                                    ${element.options.map(option => `<option value="${option}">${option}</option>`).join('')}
+                                </select>
+                                <button class="btn btn-danger" onclick="removeElement('${element.id}')">Remove</button>
+                            </div>`;
+                        break;
+                    case 'textarea':
+                        formHTML += `<div id="form-element-${element.id}" class="form-element" draggable="true" ondragstart="dragStart(event)" ondrop="drop(event)" ondragover="allowDrop(event)">
+                                <textarea class="form-control" readonly>${element.label}</textarea>
+                                <textarea class="form-control" onchange="updatePlaceholder('${element.id}', this.value)">${element.placeholder}</textarea>
+                                <button class="btn btn-danger" onclick="removeElement('${element.id}')">Remove</button>
+                            </div>`;
+                        break;
+                }
+            });
+            return formHTML;
+        }
+
+        // Function to render form elements
+        function renderForm(data) {
+            const formDesigner = $('#form-designer');
+            const formHTML = generateFormElements(data);
+            formDesigner.html(formHTML);
+        }
+
+        // Function to update label of form element
+        function updateLabel(id, value) {
+            const index = formData.findIndex(element => element.id === id);
+            if (index !== -1) {
+                formData[index].label = value;
+                renderForm(formData);
+            }
+        }
+
+        // Function to update placeholder of form element
+        function updatePlaceholder(id, value) {
+            const index = formData.findIndex(element => element.id === id);
+            if (index !== -1) {
+                formData[index].placeholder = value;
+                renderForm(formData);
+            }
+        }
+
+        // Function to add option to select element
+        function addOption(id) {
+            const index = formData.findIndex(element => element.id === id);
+            if (index !== -1) {
+                const newOption = prompt("Enter new option:");
+                if (newOption) {
+                    formData[index].options.push(newOption);
+                    renderForm(formData);
+                }
+            }
+        }
+
+        // Function to remove form element
+        function removeElement(id) {
+            formData = formData.filter(element => element.id !== id);
+            renderForm(formData);
+        }
+
+        // Function to handle drag start event
+        function dragStart(event) {
+            event.dataTransfer.setData("text/plain", event.target.id);
+        }
+
+        // Function to handle drag over event
+        function allowDrop(event) {
+            event.preventDefault();
+        }
+
+        // Function to handle drop event
+        function drop(event) {
+            event.preventDefault();
+            const sourceId = event.dataTransfer.getData("text/plain");
+            const targetId = event.target.id;
+
+            // Reorder the form data
+            const sourceIndex = formData.findIndex(element => element.id === sourceId);
+            const targetIndex = formData.findIndex(element => element.id === targetId);
+
+            if (sourceIndex !== -1 && targetIndex !== -1) {
+                const [removed] = formData.splice(sourceIndex, 1);
+                formData.splice(targetIndex, 0, removed);
+                renderForm(formData);
+            }
+        }
+
+        // Function to save form data
+        function saveFormData() {
+            console.log(JSON.stringify(formData, null, 2));
+        }
+
+        // Function to add new input field
+        function addInput() {
+            formData.push({
+                id: `input-${Date.now()}`,
+                type: "input",
+                label: "New Input",
+                placeholder: "Enter value"
+            });
+            renderForm(formData);
+        }
+
+        // Function to add new select field
+        function addSelect() {
+            formData.push({
+                id: `select-${Date.now()}`,
+                type: "select",
+                label: "New Select",
+                options: []
+            });
+            renderForm(formData);
+        }
+
+        // Function to add new textarea field
+        function addTextarea() {
+            formData.push({
+                id: `textarea-${Date.now()}`,
+                type: "textarea",
+                label: "New Textarea",
+                placeholder: "Enter text"
+            });
+            renderForm(formData);
+        }
+
+        // Event listeners for adding new form elements
+        $(document).ready(function () {
+            $('#add-input').click(addInput);
+            $('#add-select').click(addSelect);
+            $('#add-textarea').click(addTextarea);
+
+            // Event listener for saving form data
+            $('#save-form').click(saveFormData);
+
+            // Initial rendering of the form
+            renderForm(formData);
+        });
+    </script>
+</body>
+
+</html>
